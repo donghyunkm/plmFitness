@@ -1,0 +1,141 @@
+{
+  "base_args": {
+    "model": "esm2",
+    "protein": "GFP_AEQVI",
+    "list_size": 5,
+    "device": "cuda"
+  },
+  "table_runs": {
+    "rows": [
+      {
+        "label": "Fine-tune full model",
+        "args": {
+          "peft_type": "none"
+        }
+      },
+      {
+        "label": "LoRA 1,1",
+        "args": {
+          "peft_type": "lora",
+          "lora_r": 1,
+          "lora_alpha": 1
+        }
+      },
+      {
+        "label": "LoRA 2,2",
+        "args": {
+          "peft_type": "lora",
+          "lora_r": 2,
+          "lora_alpha": 2
+        }
+      },
+      {
+        "label": "LoRA 4,4",
+        "args": {
+          "peft_type": "lora",
+          "lora_r": 4,
+          "lora_alpha": 4
+        }
+      },
+      {
+        "label": "LoRA 8,8",
+        "args": {
+          "peft_type": "lora",
+          "lora_r": 8,
+          "lora_alpha": 8
+        }
+      },
+      {
+        "label": "LoRA 16, 16",
+        "args": {
+          "peft_type": "lora",
+          "lora_r": 16,
+          "lora_alpha": 16
+        }
+      },
+      {
+        "label": "LoRA 32, 32",
+        "args": {
+          "peft_type": "lora",
+          "lora_r": 32,
+          "lora_alpha": 32
+        }
+      },
+      {
+        "label": "LoRA 64, 64",
+        "args": {
+          "peft_type": "lora",
+          "lora_r": 64,
+          "lora_alpha": 64
+        }
+      }
+    ],
+    "columns": [
+      {
+        "label": "Data subset 1.0",
+        "args": {
+          "train_size": 1.0
+        }
+      },
+      {
+        "label": "Data subset 0.8",
+        "args": {
+          "train_size": 0.8
+        }
+      },
+      {
+        "label": "Data subset 0.6",
+        "args": {
+          "train_size": 0.6
+        }
+      },
+      {
+        "label": "Data subset 0.4",
+        "args": {
+          "train_size": 0.4
+        }
+      },
+      {
+        "label": "Data subset 0.2",
+        "args": {
+          "train_size": 0.2
+        }
+      },
+      {
+        "label": "Data subset 0.1",
+        "args": {
+          "train_size": 0.1
+        }
+      }
+    ]
+  },
+  "output_csv": "results/GFP_AEQVI_spearmanr_runs.csv",
+  "table": {
+    "table_csv": "results/GFP_AEQVI_spearmanr_table.csv",
+    "label_header": "Training type",
+    "row_order": [
+      "Fine-tune full model",
+      "LoRA 1,1",
+      "LoRA 2,2",
+      "LoRA 4,4",
+      "LoRA 8,8",
+      "LoRA 16, 16",
+      "LoRA 32, 32",
+      "LoRA 64, 64"
+    ],
+    "column_order": [
+      "Data subset 1.0",
+      "Data subset 0.8",
+      "Data subset 0.6",
+      "Data subset 0.4",
+      "Data subset 0.2",
+      "Data subset 0.1"
+    ],
+    "metric_fields": [
+      "GFP_AEQVI_Sarkisyan_2016_test_spearmanr",
+      "best_val_spearmanr",
+      "final_val_spearmanr",
+      "baseline_spearmanr"
+    ]
+  }
+}
