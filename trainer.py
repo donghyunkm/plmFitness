@@ -478,6 +478,7 @@ class Pipeline():
             train, valid, test = split_data(protein, args.train_size, n_sites=args.n_sites,
                                             neg_train=args.negative_train, scale=args.list_size == 1,
                                             random_state=args.seed, return_valid=True)
+            print(f'Split sizes - train: {len(train["df"])}, validation: {len(valid["df"])}, test: {len(test["df"])}')
             if args.test:
                 if test['df'].empty:
                     raise ValueError('No held-out test examples are available. Use --train_size below 1 when running --test.')
