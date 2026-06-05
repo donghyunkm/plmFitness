@@ -11,13 +11,13 @@ import pandas as pd
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
-from peft import IA3Config, LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
+from peft import IA3Config, LoraConfig, get_peft_model, PeftModel
 from scipy.stats import spearmanr
 from sklearn.metrics import ndcg_score
 from sklearn.preprocessing import minmax_scale
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from transformers import BitsAndBytesConfig, EsmTokenizer, EsmForMaskedLM
+from transformers import EsmTokenizer, EsmForMaskedLM
 
 from dataset import MutantSequenceData, RankingSequenceData
 from utils.data import make_dir, split_data
@@ -228,10 +228,6 @@ def uses_peft(args):
     return args.peft_type != 'none'
 
 
-def uses_lora(args):
-    return args.peft_type in {'lora', 'qlora'}
-
-
 def get_device(device='auto', force_cpu=False):
     mps_available = hasattr(torch.backends, 'mps') and torch.backends.mps.is_available()
     if force_cpu:
@@ -273,20 +269,7 @@ class Pipeline():
         args = self.args
         model_name = config['model_dir'][args.model]
         if load_dir is None:
-            model_kwargs = {}
-            if args.peft_type == 'qlora':
-                if self.device != 'cuda':
-                    raise ValueError('QLoRA with BitsAndBytesConfig requires CUDA. Use --device cuda or choose a different --peft_type.')
-                compute_dtype = torch.bfloat16
-                if not torch.cuda.is_bf16_supported():
-                    compute_dtype = torch.float16
-                model_kwargs['quantization_config'] = BitsAndBytesConfig(
-                    load_in_4bit=True,
-                    bnb_4bit_quant_type='nf4',
-                    bnb_4bit_use_double_quant=True,
-                    bnb_4bit_compute_dtype=compute_dtype)
-                model_kwargs['device_map'] = {'': self.device}
-            model = EsmForMaskedLM.from_pretrained(model_name, **model_kwargs)
+            model = EsmForMaskedLM.from_pretrained(model_name)
             for name, param in model.named_parameters():
                 if 'contact_head.regression' in name:
                     param.requires_grad = False
@@ -297,10 +280,8 @@ class Pipeline():
         
     def get_save_dir(self, protein_name, prediction=False, timestamp=True):
         args = self.args
-        if uses_lora(args):
+        if args.peft_type == 'lora':
             peft_name = f'r{args.lora_r}_alpha{args.lora_alpha}'
-            if args.peft_type == 'qlora':
-                peft_name = 'qlora_' + peft_name
         else:
             peft_name = args.peft_type
         save_dir = '{}/{}/{}/{}{}{}{}{}{}'.format(
@@ -321,9 +302,9 @@ class Pipeline():
         args = self.args
         if not uses_peft(args):
             return None
-        if uses_lora(args):
+        if args.peft_type == 'lora':
             if args.lora_r <= 0:
-                raise ValueError('--lora_r must be greater than 0 when using LoRA or QLoRA.')
+                raise ValueError('--lora_r must be greater than 0 when using --peft_type lora.')
             return LoraConfig(r=args.lora_r,
                               lora_alpha=args.lora_alpha,
                               target_modules=self.lora_modules,
@@ -359,8 +340,6 @@ class Pipeline():
         model, tokenizer = self.get_base_model()
         peft_config = self.get_peft_config()
         if peft_config is not None:
-            if args.peft_type == 'qlora':
-                model = prepare_model_for_kbit_training(model)
             model = get_peft_model(model, peft_config)
             print_trainable_params(model)
         
@@ -372,7 +351,7 @@ class Pipeline():
                                 batch_size=args.train_batch,
                                 shuffle=True,
                                 collate_fn=train_data.collate)
-        trainer = RankingTrainer(model if args.peft_type == 'qlora' else model.to(self.device),
+        trainer = RankingTrainer(model.to(self.device),
                                  optimizer=args.optimizer,
                                  lr=args.learning_rate,
                                  epochs=args.epochs,
@@ -420,8 +399,7 @@ class Pipeline():
         test_iter = DataLoader(test_data,
                                batch_size=args.eval_batch,
                                collate_fn=test_data.collate)
-        trainer = RankingTrainer(model if args.peft_type == 'qlora' else model.to(self.device),
-                                 log_metrics=[], score_fn=self.score_fn)
+        trainer = RankingTrainer(model.to(self.device), log_metrics=[], score_fn=self.score_fn)
         predicts, _ = trainer.evaluate(test_iter)
         predicts = predicts.tolist()
         

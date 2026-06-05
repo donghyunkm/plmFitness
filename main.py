@@ -24,7 +24,7 @@ def parse_args():
                         help='rank r of the LoRA adapters')
     parser.add_argument('--lora_alpha', '-la', type=int, default=16,
                         help='alpha scaling factor of the LoRA adapters')
-    parser.add_argument('--peft_type', '-peft', type=str, choices=['lora', 'qlora', 'ia3', 'none'], default='lora',
+    parser.add_argument('--peft_type', '-peft', type=str, choices=['lora', 'ia3', 'none'], default='lora',
                         help='type of PEFT adapter to use')
     parser.add_argument('--optimizer', '-o', type=str, choices=['sgd', 'nag', 'adagrad', 'adadelta', 'adam'],
                         default='adam', help='optimizer for training')
