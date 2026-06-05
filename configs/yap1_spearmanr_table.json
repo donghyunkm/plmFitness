@@ -3,6 +3,7 @@
     "model": "esm2",
     "protein": "YAP1_HUMAN",
     "list_size": 5,
+    "n_sites": 0,
     "device": "cuda"
   },
   "table_runs": {
