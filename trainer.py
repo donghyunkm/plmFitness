@@ -417,6 +417,7 @@ class Pipeline():
     
     def select_datasets(self, all_proteins):
         args = self.args
+        print(all_proteins.keys())
         if args.protein in all_proteins.keys():
             return all_proteins[args.protein]
         
